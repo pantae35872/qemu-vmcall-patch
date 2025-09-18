@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e 
+
+git clone https://gitlab.com/qemu-project/qemu.git
+cd qemu
+git checkout v10.1.0
+
+git apply ../changes.patch
+
+./configure \
+  --target-list=x86_64-softmmu \
+  --enable-debug \
+  --disable-werror \
+  --prefix=/usr
+
+make -j$(nproc)
+sudo make install
