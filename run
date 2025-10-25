@@ -2,9 +2,37 @@
 
 set -e 
 
-git clone https://gitlab.com/qemu-project/qemu.git
-cd qemu
-git checkout v10.1.0
+
+QEMU_VERSION_OUTPUT=$(qemu-system-x86_64 --version | head -n 1)
+QEMU_VERSION=$(echo "$QEMU_VERSION_OUTPUT" | awk '{print $4}')
+
+if [[ -z "$QEMU_VERSION" ]]; then
+    echo "Failed to parse QEMU version from output: $QEMU_VERSION_OUTPUT"
+    exit 1
+fi
+
+echo "Detected QEMU version: $QEMU_VERSION"
+
+if [[ -d qemu/.git ]]; then
+    echo "Using existing qemu repo"
+    cd qemu
+    git fetch origin --tags
+    git fetch origin --tags
+    git reset --hard
+    git clean -fdx
+else
+    echo "Cloning qemu repo"
+    git clone https://gitlab.com/qemu-project/qemu.git
+    cd qemu
+fi
+
+if git rev-parse "v$QEMU_VERSION" >/dev/null 2>&1; then
+    git checkout "v$QEMU_VERSION"
+else
+    echo "Tag v$QEMU_VERSION not found. Showing available tags:"
+    git tag -l | tail -n 10
+    exit 1
+fi
 
 git apply ../changes.patch
 
