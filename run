@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e 
-
+set -e
 
 QEMU_VERSION_OUTPUT=$(qemu-system-x86_64 --version | head -n 1)
 QEMU_VERSION=$(echo "$QEMU_VERSION_OUTPUT" | awk '{print $4}')
@@ -52,3 +51,9 @@ export LDFLAGS="-flto=auto -Wl,-O2 -Wl,--as-needed"
 
 make -j$(nproc)
 sudo make install
+cd ..
+
+echo "Installing dkms module to disable hypercall"
+cd kvm-hypercall-patch
+sudo dkms install .
+echo "To disable hypercall (vmmcall and vmcall) load kvm-hypercall-patch module by using modprobe, or you could do it automatically on boot in /etc/modules-load.d"

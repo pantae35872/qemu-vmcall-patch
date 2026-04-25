@@ -1,37 +1,14 @@
-diff --git a/target/i386/kvm/kvm.c b/target/i386/kvm/kvm.c
-index 369626f8c8..fc71b86a4e 100644
---- a/target/i386/kvm/kvm.c
-+++ b/target/i386/kvm/kvm.c
-@@ -3228,6 +3228,20 @@ static int kvm_vm_enable_energy_msrs(KVMState *s)
-     return 0;
- }
- 
-+
-+static int kvm_vm_disable_hypercall_patching(KVMState *s)
-+{
-+    int valid_quirks = kvm_vm_check_extension(s, KVM_CAP_DISABLE_QUIRKS2);
-+
-+    if (valid_quirks & KVM_X86_QUIRK_FIX_HYPERCALL_INSN) {
-+        return kvm_vm_enable_cap(s, KVM_CAP_DISABLE_QUIRKS2, 0,
-+                                 KVM_X86_QUIRK_FIX_HYPERCALL_INSN);
-+    }
-+
-+    warn_report("kvm: disabling hypercall patching not supported");
-+    return 0;
-+}
-+
- int kvm_arch_init(MachineState *ms, KVMState *s)
- {
-     int ret;
-@@ -3367,6 +3381,11 @@ int kvm_arch_init(MachineState *ms, KVMState *s)
+diff -ru qemu/target/i386/kvm/kvm.c qemu-patched/target/i386/kvm/kvm.c
+--- qemu/target/i386/kvm/kvm.c	2026-04-25 18:43:07.403788056 +0700
++++ qemu-patched/target/i386/kvm/kvm.c	2026-04-25 22:24:57.675303998 +0700
+@@ -3609,6 +3609,10 @@
          }
      }
  
-+    
-+    if (kvm_vm_disable_hypercall_patching(s)) {
-+        warn_report("kvm: failed to disable hypercall patching quirk");
++    if (kvm_vm_enable_cap(s, KVM_CAP_DISABLE_QUIRKS2, 0, KVM_X86_QUIRK_FIX_HYPERCALL_INSN)) {
++        warn_report("kvm: failed to disable hypercall quirk");
 +    }
 +
+     first = false;
      return 0;
  }
- 
